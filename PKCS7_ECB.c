@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <math.h>
-#include <openssl/sha.h>
 #include "E-DES.h"
 //////////////////////////////////////////////////////////////////////
 //																	//
@@ -173,87 +171,4 @@ int PKCS7_unpadding(uint32_t paddedblock[BLOCKSIZE], char plaintext[],
     }
 
     return j;
-}
-/*
-E_DES function receives a key(String) and plaintext(String), it
-encrypts and decrypts with PKCS #7: Cryptographic Message Syntax, 
-showing the message states in standout.
-Arguments:
-	plaintext: its a plaintext message to be ciphered.
-	key: a key to generate the s-boxes of E-DES Algorithm.
-*/
-void E_DES(char* plaintext, char* key)
-{
-	int key_lineSize = strlen(key);
-	int plaintext_lineSize = strlen(plaintext);
-
-  	char key256bits[32];
-	SHA256(key, key_lineSize,key256bits);
-			
-	uint8_t sbox_list[16][256];
-	sbox_generator(key256bits, sbox_list);
-
-	int ciphertext_len;
-	ciphertext_len = 2 * (1 + ceil(plaintext_lineSize/BLOCKSIZECHAR));
-
-  	uint32_t ciphertext[ciphertext_len]; 
-  	uint32_t Intermciphertext[BLOCKSIZE]; 
-  	uint32_t plaintext_block[BLOCKSIZE];
-
-  	char pivot[BLOCKSIZECHAR];
-  	int j = 0;
-
-  	for (int i = 0; i < plaintext_lineSize; i = BLOCKSIZECHAR + i)
-  	{
-  		substring(plaintext, i, i + BLOCKSIZECHAR, pivot);
-  		PKCS7_padding(pivot, plaintext_block);
-  		encrypt(plaintext_block, sbox_list, Intermciphertext);
-  		ciphertext[j] = Intermciphertext[0];
-  		ciphertext[j + 1] = Intermciphertext[1];
-
-  		j = j + BLOCKSIZE;
-  	}
-
-	printf("\nCiphered text: \n");
-
-	for (int i = 0; i < ciphertext_len; ++i)
-	{
-		printf("%08x ", ciphertext[i]); 
-	}
-  	printf("\n\n\n");
-
-  	int k = 0;
-
-  	char decipheredtext[plaintext_lineSize];
-  	uint32_t Intermpplaintext[BLOCKSIZE];
-  	uint32_t ciphertext_block[BLOCKSIZE];
-
-  	for (int i = 0; i < ciphertext_len; i = i + BLOCKSIZE)
-  	{
-  		ciphertext_block[0] = ciphertext[i];
-  		ciphertext_block[1] = ciphertext[i + 1];
-  		decrypt(ciphertext_block, sbox_list, Intermpplaintext);
-  		k = PKCS7_unpadding(Intermpplaintext, decipheredtext, k);
-  	}
-
-  	printf("\nDeciphered plaintext:\n%s\n", decipheredtext);
-	
-}
-
-/*
-The main function is expected to receive 2 arguments, 
-a plaintext(on argv[1]) and key(on argv[2]), and calls E_DES function.
-Arguments:
-	argc: expected to be equal to 3
-	argv[1]: its a plaintext message to be applied on E-DES Algorithm.
-	argv[2]: its a key message to be applied on E-DES Algorithm.
-*/
-
-int main(int argc, char *argv[]) 
-{
-	printf("Plain Text: %s\n", argv[1]);
-	printf("\n");
-	printf("Key: %s\n", argv[2]);
-	E_DES(argv[1], argv[2]);
-	return 1;	
 }

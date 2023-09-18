@@ -1,6 +1,7 @@
 #include <openssl/sha.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "utils.h"
 //////////////////////////////////////////////////////////////////////
 //																	//
@@ -16,7 +17,7 @@ const int BLOCKSIZE32 = 2;
 // the set values
 const int NUMBERSBOXES = 16;
 // The static variable SBOXESIZE is the size of the s-boxes
-const int SBOXESIZE = 32;
+const int SBOXESIZE = 256;
 /*
 This function receives a plaintext block and set of s-boxes, applies the 
 Feistel Network, output the ciphered text to the output argument.
@@ -220,41 +221,6 @@ void generate_digest2048(uint8_t* subkey, uint8_t digest[SBOXESIZE])
 	}
 }
 /*
-This function receives a digest and converts it to a 256 bit digest 
-without any duplicate. 
-Arguments:
-	digest: an array of uint8_t to base the digest
-	sbox: 256 bit digest without any duplicate
-*/
-void generate_digest256_nodup(uint8_t digest[SBOXESIZE], 
-							  uint8_t sbox[SBOXESIZE])
-{
-	memset(sbox, 0, SBOXESIZE);
-
-	uint8_t counter = 0;
-	int j = 0;
-	int position = 0;
-	for (int i = 0; i < SBOXESIZE; ++i)
-	{
-		j = digest[i];
-		for (int t = 0; t < SBOXESIZE; ++t)
-		{
-			position = j%SBOXESIZE;
-			if (sbox[position] == 0)
-			{
-				sbox[position] = counter;
-				counter++;
-				break;
-			}
-			else
-			{
-				j++;
-			}
-
-		}
-	} 
-}
-/*
 This function receives a key, breaks it into 3 subkeys and creates a 
 digest from each subkey. With the 3 digests we create pseudo-random
 generator, that will generate each s-boxes.
@@ -301,6 +267,6 @@ void sbox_generator(unsigned char key[SBOXESIZE],
 		}
 
 		XOR8bitsarray(digest, digest1, digest2, digest3, SBOXESIZE);
-		generate_digest256_nodup(digest, s_boxes[i]);
+		generate_digest2048(digest, s_boxes[i]);
 	}
 }
