@@ -8,3 +8,7 @@ blocks must have the same size, 64 bits.git
 ```console
 gcc PKCS7_ECB.c PKCS7_ECB.h main.c E-DES.h E-DES.c utils.h utils.c -o test -lssl -lcrypto && ./test plaintext key
 ```
+
+## TO DO
+
+* Need to add error handling
